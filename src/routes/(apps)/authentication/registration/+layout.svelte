@@ -33,7 +33,7 @@
 		onAuthStateChanged(auth, (user) => {
 			if (!user && !hiddenRoutes.includes(window.location.pathname)) {
 				showToast('⚠️ Please log in before continuing your application.', 'error');
-				setTimeout(() => goto('/authentication/registration'), 1500);
+				setTimeout(() => goto('/authentication/registration'), 250);
 			}
 		});
 
@@ -52,22 +52,19 @@
 
 <div class="bg-background relative flex min-h-screen flex-col" id="registration-page">
 	<!-- Sticky Stepper Strip -->
-	<div
-		class="sticky top-0 z-50 w-full bg-black bg-opacity-30 border-b border-white/10 backdrop-blur-md stepper-transition"
-		class:py-1={$scrolled}
-		class:py-2={!$scrolled}
-	>
+		<!-- ✅ Only render the stepper container if it's not a hidden route -->
 		{#if !hiddenRoutes.includes($page.url.pathname)}
 			<div
-				class="hidden sm:block sticky top-0 z-50 w-full bg-black bg-opacity-30 border-b border-white/10 backdrop-blur-md stepper-transition"
+				class="sticky top-0 z-50 w-full bg-black bg-opacity-30 border-b border-white/10 backdrop-blur-md stepper-transition"
 				class:py-1={$scrolled}
 				class:py-2={!$scrolled}
 			>
-				<Stepper current={getStep($page.url.pathname)} {steps} shrink={$scrolled} />
+				<!-- Stepper visible only on sm and up -->
+				<div class="hidden sm:block">
+					<Stepper current={getStep($page.url.pathname)} {steps} shrink={$scrolled} />
+				</div>
 			</div>
 		{/if}
-	</div>
-
 	<!-- Page Content -->
 	<div class="flex-1 w-full">
 		<slot />
