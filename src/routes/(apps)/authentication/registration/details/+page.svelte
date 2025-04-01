@@ -16,6 +16,10 @@
 		? { label: localForm.gender, value: localForm.gender }
 		: undefined;
 
+	$: selectedProvince = localForm.province
+		? { label: localForm.province, value: localForm.province }
+		: undefined;
+
 	$: selectedRace = localForm.race
 		? { label: localForm.race, value: localForm.race }
 		: undefined;
@@ -83,7 +87,32 @@
 				</Select.Root>
 			</div>
 
-			<div><Label for="province">Province</Label><Input id="province" value={localForm.province} on:input={(e) => localForm.province = e.target.value} /></div>
+			<!-- Province Select -->
+			<div>
+				<Label>Province</Label>
+				<Select.Root
+					selected={localForm.province ? { label: localForm.province, value: localForm.province } : undefined}
+					on:selectedChange={(val) => {
+			if (val) {
+				localForm.province = val.value;
+			}
+		}}
+				>
+					<Select.Trigger class="bg-white/20 text-white border border-white/10" />
+					<Select.Content>
+						<Select.Item value="Eastern Cape">Eastern Cape</Select.Item>
+						<Select.Item value="Free State">Free State</Select.Item>
+						<Select.Item value="Gauteng">Gauteng</Select.Item>
+						<Select.Item value="KwaZulu-Natal">KwaZulu-Natal</Select.Item>
+						<Select.Item value="Limpopo">Limpopo</Select.Item>
+						<Select.Item value="Mpumalanga">Mpumalanga</Select.Item>
+						<Select.Item value="North West">North West</Select.Item>
+						<Select.Item value="Northern Cape">Northern Cape</Select.Item>
+						<Select.Item value="Western Cape">Western Cape</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			</div>
+
 			<div><Label for="postal">Postal Code</Label><Input id="postal" value={localForm.postalCode} on:input={(e) => localForm.postalCode = e.target.value} /></div>
 			<div class="col-span-full"><Label for="address">Address</Label><Input id="address" value={localForm.address} on:input={(e) => localForm.address = e.target.value} /></div>
 		</div>
