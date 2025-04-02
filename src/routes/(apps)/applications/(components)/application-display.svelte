@@ -71,17 +71,18 @@
 	<!-- Toolbar -->
 	<div class="mb-1 flex items-center p-2">
 		<div class="flex items-center gap-2">
-			<Tooltip.Root>
-				<Tooltip.Trigger
-					class={buttonVariants({ variant: "ghost", size: "icon" })}
-					disabled={!application}
-					on:click={toggleArchive}
-				>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class={buttonVariants({ variant: "ghost", size: "icon" })} disabled={!application}>
 					<Icons.Archive class="size-4" />
 					<span class="sr-only">Archive</span>
-				</Tooltip.Trigger>
-				<Tooltip.Content>Archive</Tooltip.Content>
-			</Tooltip.Root>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Item on:click={toggleArchive()}>
+						{application?.archived ? 'Unarchive' : 'Archive'} application
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+
 
 			<Tooltip.Root>
 				<Tooltip.Trigger class={buttonVariants({ variant: "ghost", size: "icon" })} disabled={!application}>

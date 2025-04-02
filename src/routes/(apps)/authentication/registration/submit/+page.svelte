@@ -129,7 +129,7 @@ A traceable referral letter from your Pastor.`);
 			uploads: uploadURLs,
 			read: false,
 			archived: false,
-			stared: false,
+			starred: false,
 			dateSubmitted: new Date(),
 			status: 'Pending',
 			aiResponse: apiResponse,

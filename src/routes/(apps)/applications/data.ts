@@ -32,7 +32,7 @@ export type Application = {
 	dateSubmitted: string; // Firestore timestamp converted to string
 	read: boolean;
 	archived: boolean;
-	stared: boolean;
+	starred: boolean;
 };
 
 export type Account = {
@@ -65,7 +65,7 @@ export const loadApplications = async () => {
 				userId,
 				read: app.read ?? false,
 				archived: app.archived ?? false,
-				stared: app.stared ?? false,
+				starred: app.starred ?? false,
 				dateSubmitted: app.dateSubmitted?.toDate().toISOString()
 			});
 		}

@@ -97,7 +97,7 @@
 					</Tabs.Content>
 
 					<Tabs.Content value="archived" class="m-0">
-						{@const archivedApps = $applications.filter(item => !item.archived)}
+						{@const archivedApps = $applications.filter(item => item.archived)}
 						{#if archivedApps.length > 0}
 							<ApplicationList items={archivedApps} onSelect={handleSelect} />
 						{:else}
@@ -107,7 +107,7 @@
 
 
 					<Tabs.Content value="stared" class="m-0">
-						{@const staredApps = $applications.filter(item => !item.stared)}
+						{@const staredApps = $applications.filter(item => item.starred)}
 						{#if staredApps.length > 0}
 							<ApplicationList items={staredApps} onSelect={handleSelect} />
 						{:else}

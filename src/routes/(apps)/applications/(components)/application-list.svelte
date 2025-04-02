@@ -10,13 +10,19 @@
 	export let items: Application[];
 	export let onSelect: (app: Application) => void = () => {};
 
-	function getBadgeVariant(key: string) {
-		if (!key) return "secondary";
-		const lower = key.toLowerCase();
-		if (["gauteng", "western cape", "kwazulu-natal"].includes(lower)) return "default";
-		if (["limpopo", "free state"].includes(lower)) return "outline";
-		return "secondary";
+	function calculateAge(idNumber: string): number {
+		if (!idNumber || idNumber.length < 2) return 0;
+		const year = parseInt(idNumber.slice(0, 2), 10);
+		const currentYear = new Date().getFullYear();
+		const fullYear = year > 30 ? 1900 + year : 2000 + year;
+		return currentYear - fullYear;
 	}
+
+	function getAgeBadgeVariant(age: number): "secondary" | "outline" {
+		return age >= 40 && age <= 50 ? "secondary" : "outline";
+	}
+
+
 </script>
 
 <ScrollArea class="h-screen">
@@ -63,15 +69,17 @@
 					{item?.motivation?.substring(0, 150) ?? "No motivation provided"}...
 				</div>
 
-				<!-- Badges for Province and Experience -->
+				<!-- Badges for Age and Experience -->
 				<div class="flex flex-wrap gap-2 mt-1">
-					{#if item?.province}
-						<Badge variant={getBadgeVariant(item.province)}>{item.province}</Badge>
-					{/if}
 					{#if item?.experience}
 						<Badge variant="secondary">{item.experience} yrs exp</Badge>
 					{/if}
+					{#if item?.idNumber}
+						{@const age = calculateAge(item.idNumber)}
+						<Badge variant={getAgeBadgeVariant(age)}>{age} yrs old</Badge>
+					{/if}
 				</div>
+
 			</button>
 		{/each}
 	</div>
