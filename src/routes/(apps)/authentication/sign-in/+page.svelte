@@ -33,8 +33,23 @@
 				return 'Google sign-in was cancelled.';
 			case 'auth/too-many-requests':
 				return 'Too many attempts. Please try again later.';
+			case 'auth/unauthorized-domain':
+				return 'Sign-in from this domain is not allowed. Contact support.';
+			case 'auth/weak-password':
+				return 'Password must be at least 6 characters long.';
+			case 'auth/internal-error':
+				return 'Something went wrong on our side. Please try again.';
+			case 'auth/account-exists-with-different-credential':
+				return 'An account already exists with a different sign-in method.';
+			case 'auth/email-already-in-use':
+				return 'This email is already in use. Try logging in.';
+			case 'auth/operation-not-allowed':
+				return 'Sign-in method is not allowed. Contact support.';
+			case 'auth/missing-password':
+				return 'Please enter your password.';
 			default:
-				return 'Something went wrong. Please try again.';
+				// Catch-all for unexpected errors
+				return `Unexpected error: ${code}. Please try again or contact support.`;
 		}
 	}
 
