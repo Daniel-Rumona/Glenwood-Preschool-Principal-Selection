@@ -12,14 +12,20 @@ const formatter = new Intl.RelativeTimeFormat(undefined, {
 	numeric: "auto",
 });
 
-export function formatTimeAgo(date: Date) {
-	let duration = (date.getTime() - new Date().getTime()) / 1000;
+export function formatTimeAgo(input: Date | undefined | null): string {
+	if (!(input instanceof Date) || isNaN(input.getTime())) {
+		return "Invalid date";
+	}
 
-	for (let i = 0; i <= DIVISIONS.length; i++) {
-		const division = DIVISIONS[i];
+	let duration = (input.getTime() - Date.now()) / 1000;
+
+	for (const division of DIVISIONS) {
 		if (Math.abs(duration) < division.amount) {
 			return formatter.format(Math.round(duration), division.name);
 		}
 		duration /= division.amount;
 	}
+
+	return "a long time ago";
 }
+

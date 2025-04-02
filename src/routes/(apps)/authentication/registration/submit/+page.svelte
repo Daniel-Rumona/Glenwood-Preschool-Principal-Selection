@@ -3,12 +3,11 @@
 	import { registrationForm } from '$lib/stores/registration';
 	import { getAuth } from 'firebase/auth';
 	import { db, storage } from '$lib/firebase';
-	import { collection, addDoc } from 'firebase/firestore';
+	import { getDocs, collection, addDoc, doc, setDoc } from "firebase/firestore";
 	import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { Button } from '$lib/components/ui/button'
-
+	import { Button } from '$lib/components/ui/button';
 
 	let loading = true;
 	let success = false;
@@ -16,15 +15,44 @@
 
 	const auth = getAuth();
 
+
 	onMount(async () => {
 		const user = auth.currentUser;
 		if (!user) return goto('/authentication/registration');
 
+		// 🔁 Get current application count to generate APP### ID
+		const appsRef = collection(db, `Users/${user.uid}/Applications`);
+		const appsSnap = await getDocs(appsRef);
+		const newAppId = `APP${String(appsSnap.size + 1).padStart(3, '0')}`;
+
 		const form = get(registrationForm);
 		const uploads = form.uploads;
-		const uploadURLs: Record<string, string> = {};
 
-		// ✅ Upload files to Firebase Storage
+
+		// ✅ Only allow these 5 specific keys
+		const requiredKeys = ['cv', 'coverLetter', 'referral1', 'referral2', 'pastorLetter'];
+
+		// 🔎 Check for missing keys
+		for (const key of requiredKeys) {
+			if (!uploads[key]) {
+				error = `Missing required document: ${key}`;
+				loading = false;
+				return;
+			}
+			const file = uploads[key];
+			if (!(file instanceof File)) {
+				error = `Invalid file upload for: ${key}`;
+				loading = false;
+				return;
+			}
+			if (!file.name.toLowerCase().endsWith('.pdf')) {
+				error = `Only PDF files are allowed for: ${key}`;
+				loading = false;
+				return;
+			}
+		}
+		const uploadURLs: Record<string, string> = {};
+		// 🔁 Upload to Firebase Storage
 		for (const [key, file] of Object.entries(uploads)) {
 			if (file instanceof File) {
 				const storageRef = ref(storage, `uploads/${user.uid}/${key}`);
@@ -34,38 +62,88 @@
 			}
 		}
 
-		// ✅ Build payload for external API
+		// 🔁 Prepare API form data
 		const apiFormData = new FormData();
-		if (uploads.cv) apiFormData.append('cv', uploads.cv);
-		if (uploads.coverLetter) apiFormData.append('cover_letter', uploads.coverLetter);
-		if (uploads.referral1) apiFormData.append('referral_1', uploads.referral1);
-		if (uploads.referral2) apiFormData.append('referral_2', uploads.referral2);
-		if (uploads.pastorLetter) apiFormData.append('pastor_referral', uploads.pastorLetter);
+		apiFormData.append('job_id', 'Principal Vacancy');
+		apiFormData.append('job_description', `Glenwood Community Pre-School
+2025
 
+Suitable candidates, meeting the following qualifications and requirements, are invited to apply for the above position commencing------------2025
+
+Criteria for Application:
+
+Must have a 4 year full time post Matric qualification in ECD.
+Age group 40-50 yrs???
+4yrs + proven Management experience in a Pre-Primary setting, at a well reputed school.
+Have a working knowlege of Department of Basic Education (DBE) systems, regulations/laws/and rules, governing the running of a registered, privately run, Community Pre-School.
+Provide excellent, strong, strategic leadership, management and vision for the school, upholding its strong Christian ethos.
+Manage and encourage an environment of on-going team work.
+Be responsible for developing and implementing policies, procedures, curriculum and budgeting, which align with our Christian values and mission, and promote the school's on-going development and growth.
+Monitoring and assessing all staff performances, and facilitating opportunities for on-going growth, and development of all Educators.
+Have innovative problem solving skills, adaptability, and at all times maintaining harmonious relationships with staff, parents and the community.
+Promote intellectual, social, physical and spiritual development of learners.
+Effectively supervise learner discipline, drive learner growth and facilitate parent education and involvement.
+Work in consultation with the Management Committee, to recruit and retain suitably qualified staff.
+Reporting and working colloboratively with the Pastor and Management Committee, on all matters, relating to the effective running of the school.
+Candidate is required to be a committed Christian, who is an active member of an evangelistic church.
+
+Attach to your CV:
+A Cover letter
+2 Traceable Management Referral letters from previous Principals.
+A traceable referral letter from your Pastor.`);
+
+		apiFormData.append('applicant_id', form.personal.name || user.email || 'Unknown');
+
+		// 📄 Append each uploaded file to the API
+		Object.values(uploads).forEach(file => {
+			if (file instanceof File) {
+				apiFormData.append('files', file); // 🔑 API expects key to be 'files'
+			}
+		});
+
+		// 🔁 Send to external API
 		let apiResponse = null;
 		try {
 			const res = await fetch('https://rairo-recruitment-api.hf.space/process-application', {
 				method: 'POST',
 				body: apiFormData
 			});
-			apiResponse = await res.json();
+			if (res.ok) {
+				apiResponse = await res.json();
+			} else {
+				error = "AI service failed to process the application.";
+			}
 		} catch (err) {
 			console.error('Failed to send to external API:', err);
+			error = "Unable to connect to the AI service.";
 		}
 
-		// ✅ Save everything to Firestore
-		await addDoc(collection(db, `Users/${user.uid}/Applications`), {
-	...form.personal,
-	...form.experience,
+
+		// 🔁 Save to Firestore
+		await addDoc(appsRef, {
+			id: newAppId,
+			userId: user.uid,
+			email: user.email,
+			...form.personal,
+			...form.experience,
 			uploads: uploadURLs,
 			read: false,
-			apiResult: apiResponse,
-			dateSubmitted: new Date()
-	});
+			archived: false,
+			stared: false,
+			dateSubmitted: new Date(),
+			status: 'Pending',
+			aiResponse: apiResponse,
+			// 🧠 AI evaluation fields
+			aiJustification: apiResponse?.justification || null,
+			aiRecommendation: apiResponse?.recommendation || null,
+			aiScore: apiResponse?.score || null
+		});
 
-	goto('/application-status');
+
+		goto('/application-status');
 	});
 </script>
+
 <main class="registration-page">
 	<img src="/QuantilytixO.png" alt="Logo" class="logo logo-bottom-right" />
 

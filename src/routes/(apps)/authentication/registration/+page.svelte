@@ -8,14 +8,17 @@
 		addDoc,
 		signInWithGoogle
 	} from '$lib/firebase';
+	import { doc, setDoc } from 'firebase/firestore';
 	import { writable } from 'svelte/store';
 	import { toast } from 'svelte-sonner';
 
+	let fullName = '';
 	let email = '';
 	let password = '';
 	const errorMessage = writable('');
 	let loading = false;
 
+	const adminEmails = ['helperzhou@gmail.com', 'danielrumona@gmail.com'];
 
 	// 🔹 Friendly Firebase error messages
 	function getFriendlyErrorMessage(code: string): string {
@@ -40,20 +43,20 @@
 		try {
 			const userCred = await createUserWithEmailAndPassword(auth, email, password);
 			const user = userCred.user;
+			const isAdmin = adminEmails.includes(user.email ?? '');
 
-			await addDoc(collection(db, 'Users'), {
+			await setDoc(doc(db, 'Users', user.uid), {
 				uid: user.uid,
 				userEmail: user.email,
+				fullName: fullName, // ⬅️ use entered name
 				createdAt: new Date()
 			});
 
-			toast.success('Account created successfully!', {
-				description: 'You can now continue your application.'
+			toast.success('Signed in successfully!', {
+				description: isAdmin ? 'Welcome back, Admin.' : 'Welcome! Let’s get started.',
 			});
 
-			setTimeout(() => {
-				goto('/authentication/registration/details');
-			}, 1200);
+			goto(isAdmin ? '/dashboard' : '/authentication/registration/details');
 		} catch (err: any) {
 			console.error('❌ Signup Error:', err);
 			errorMessage.set(getFriendlyErrorMessage(err.code));
@@ -62,28 +65,35 @@
 		}
 	}
 
-	// 🔐 Handle Google Sign-up
+
+
 	async function handleGoogleSignUp() {
 		errorMessage.set('');
 		try {
 			const user = await signInWithGoogle();
+			const isAdmin = adminEmails.includes(user.email ?? '');
 
-			// Optional: Save user to Firestore only if first time
-			await addDoc(collection(db, 'Users'), {
+			await setDoc(doc(db, 'Users', user.uid), {
 				uid: user.uid,
 				userEmail: user.email,
+				fullName: user.displayName,
 				createdAt: new Date(),
 				provider: 'google'
 			});
 
-			goto('/authentication/registration/details');
+			toast.success('Signed in successfully!', {
+				description: isAdmin ? 'Welcome back, Admin.' : 'Welcome! Let’s get started.',
+			});
+
+			goto(isAdmin ? '/dashboard' : '/authentication/registration/details');
 		} catch (err: any) {
 			console.error('❌ Google Sign-up Error:', err);
 			errorMessage.set(getFriendlyErrorMessage(err.code));
 		}
 	}
 
-	//Handle password visi
+
+	//Handle password visibility
 	let showPassword = false;
 	let passwordVisibilityTimer: NodeJS.Timeout | null = null;
 
@@ -106,6 +116,13 @@
 
 	<div class="w-full max-w-md bg-gradient-to-br from-black/60 to-indigo-900/40 backdrop-blur-xl p-6 sm:p-10 rounded-2xl shadow-2xl text-white border border-white/10">
 		<h1 class="text-2xl font-semibold text-center mb-6">Create Account</h1>
+
+		<input
+			type="text"
+			placeholder="Full Name"
+			bind:value={fullName}
+			class="input"
+		/>
 
 		<input
 			type="email"
@@ -215,6 +232,7 @@
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.1);
         transition: border 0.2s ease;
+				margin: 5px;
     }
     .input::placeholder {
         color: rgba(255, 255, 255, 0.6);

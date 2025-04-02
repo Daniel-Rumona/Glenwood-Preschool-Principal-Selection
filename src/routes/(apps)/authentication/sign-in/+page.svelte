@@ -1,22 +1,30 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { auth, signInWithEmailAndPassword, signInWithGoogle } from '$lib/firebase';
+	import { auth, db, signInWithEmailAndPassword, signInWithGoogle } from '$lib/firebase';
+	import { collection, getDocs } from 'firebase/firestore';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { writable } from 'svelte/store';
+	import { showToast } from '$lib/stores/toast';
 
 	let email = '';
 	let password = '';
+	let loading = writable(false);
 	let error = writable('');
+	let showPassword = false;
 
-	// 🔹 Friendly error messages
+
+	const adminEmails = ['helperzhou@gmail.com', 'danielrumona@gmail.com'];
+
 	function getFriendlyErrorMessage(code: string) {
 		switch (code) {
 			case 'auth/invalid-email':
 				return 'Please enter a valid email address.';
 			case 'auth/user-not-found':
 				return 'No user found with that email.';
+			case 'auth/invalid-credential':
+				return 'Invalid credentials, check your details and try again.';
 			case 'auth/wrong-password':
 				return 'Incorrect password. Please try again.';
 			case 'auth/network-request-failed':
@@ -30,25 +38,47 @@
 		}
 	}
 
+	const redirectBasedOnRole = async (userId: string, userEmail: string) => {
+		const appsRef = collection(db, `Users/${userId}/Applications`);
+		const snapshot = await getDocs(appsRef);
+
+		const isAdmin = adminEmails.includes(userEmail);
+		const hasApplications = !snapshot.empty;
+
+		showToast('✅ Login successful!', 'success');
+
+		if (isAdmin) goto('/dashboard');
+		else if (hasApplications) goto('/application-status');
+		else goto('/authentication/registration/details');
+	};
+
 	const login = async () => {
 		error.set('');
+		loading.set(true);
 		try {
-			await signInWithEmailAndPassword(auth, email, password);
-			goto('/dashboard');
+			const result = await signInWithEmailAndPassword(auth, email, password);
+			await redirectBasedOnRole(result.user.uid, result.user.email ?? '');
 		} catch (err: any) {
 			console.error(err);
 			error.set(getFriendlyErrorMessage(err.code));
+			showToast(getFriendlyErrorMessage(err.code), 'error');
+		} finally {
+			loading.set(false);
 		}
 	};
 
 	const loginWithGoogle = async () => {
 		error.set('');
+		loading.set(true);
 		try {
-			await signInWithGoogle();
-			goto('/dashboard');
+			const result = await signInWithGoogle();
+			await redirectBasedOnRole(result.user.uid, result.user.email ?? '');
 		} catch (err: any) {
 			console.error(err);
 			error.set(getFriendlyErrorMessage(err.code));
+			showToast(getFriendlyErrorMessage(err.code), 'error');
+		} finally {
+			loading.set(false);
 		}
 	};
 </script>
@@ -79,23 +109,52 @@
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
 					<Label for="password">Password</Label>
-					<a href="/forgot-password" class="text-sm underline text-white/80 hover:text-white">Forgot?</a>
+					<a href="/authentication/forgot-password" class="text-sm underline text-white/80 hover:text-white">Forgot?</a>
 				</div>
-				<Input
-					id="password"
-					type="password"
-					bind:value={password}
-					class="bg-white/20 text-white placeholder-white/70 border border-white/10 focus:ring-white"
-				/>
+				<div class="relative">
+					<Input
+						id="password"
+						type={showPassword ? 'text' : 'password'}
+						bind:value={password}
+						class="bg-white/20 text-white placeholder-white/70 border border-white/10 focus:ring-white pr-10"
+					/>
+					<button
+						type="button"
+						class="absolute inset-y-0 right-2 flex items-center text-white/70 hover:text-white text-sm"
+						on:click={() => (showPassword = !showPassword)}
+					>
+						{showPassword ? 'Hide' : 'Show'}
+					</button>
+				</div>
+
 			</div>
 
-			<Button class="w-full" on:click={login}>Login</Button>
+			<Button class="w-full" on:click={login} disabled={$loading}>
+				{#if $loading}
+					<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+					</svg>
+				{:else}
+					Login
+				{/if}
+			</Button>
+
 
 			<div class="text-center text-white/60 text-sm">or</div>
 
-			<Button variant="outline" class="w-full text-white border-white/40 hover:bg-white/10" on:click={loginWithGoogle}>
-				Login with Google
-			</Button>
+
+			<Button variant="outline" class="w-full text-white border-white/40 hover:bg-white/10" on:click={loginWithGoogle} disabled={$loading}>
+					{#if $loading}
+						<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+						</svg>
+					{:else}
+						Login with Google
+					{/if}
+				</Button>
+
 		</div>
 
 		<p class="mt-6 text-center text-sm text-white/70">

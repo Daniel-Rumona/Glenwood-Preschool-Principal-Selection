@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { accounts, applications } from "./data.js";
-	import Mail from "./(components)/application.svelte";
-
+	import Application from "./(components)/application.svelte";
 	export let data;
+
 </script>
 
-<Mail
-	{accounts}
-	{applications}
+<Application
+	applications={data.applications}
+	accounts={data.accounts}
 	defaultLayout={data.layout}
 	defaultCollapsed={data.collapsed}
 	navCollapsedSize={4}

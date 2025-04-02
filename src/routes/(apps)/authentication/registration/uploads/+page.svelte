@@ -23,7 +23,7 @@
 	<img src="/QuantilytixO.png" alt="Logo" class="logo logo-bottom-right" />
 
 	<div class="w-full max-w-5xl bg-gradient-to-br from-black/60 to-indigo-900/40 backdrop-blur-xl p-6 sm:p-10 rounded-2xl mx-auto shadow-2xl text-white border border-white/10">
-		<h2 class="text-2xl font-bold mb-6">Upload Documents</h2>
+		<h2 class="text-2xl font-bold mb-6">Upload Documents [As PDFs]</h2>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			{#each [
