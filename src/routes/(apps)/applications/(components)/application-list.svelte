@@ -69,7 +69,7 @@
 					{item?.motivation?.substring(0, 150) ?? "No motivation provided"}...
 				</div>
 
-				<!-- Badges for Age and Experience -->
+				<!-- Badges for Age, Experience and Status -->
 				<div class="flex flex-wrap gap-2 mt-1">
 					{#if item?.experience}
 						<Badge variant="secondary">{item.experience} yrs exp</Badge>
@@ -79,6 +79,21 @@
 						<Badge variant={getAgeBadgeVariant(age)}>{age} yrs old</Badge>
 					{/if}
 				</div>
+<!-- Status badge -->
+{#if item?.status}
+	<Badge
+		variant="outline"
+		class={cn(
+			"text-xs",
+			item.status === 'Accepted' && 'bg-green-100 text-green-800 border-green-300',
+			item.status === 'Rejected' && 'bg-red-100 text-red-800 border-red-300',
+			item.status === 'Pending' && 'bg-yellow-100 text-yellow-800 border-yellow-300'
+		)}
+	>
+		{item.status}
+	</Badge>
+{/if}
+
 
 			</button>
 		{/each}
