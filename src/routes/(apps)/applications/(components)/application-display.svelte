@@ -137,6 +137,60 @@
 					</div>
 				</div>
 			</div>
+<div class="border rounded-md p-4 bg-muted/50 mt-4">
+				<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+					<!-- Left side: Recommendation text -->
+					<div>
+						<p class="font-medium text-sm mb-1">🧠 Quant AI Recommendation</p>
+						<div class="text-sm">
+							{#if application.aiRecommendation}
+								{#if application.aiRecommendation.toLowerCase() === 'hire'}
+									✅ <strong>Recommended</strong>
+								{:else}
+									❌ <strong>Not Recommended</strong>
+								{/if}
+							{:else}
+								<span class="italic text-muted-foreground">No recommendation</span>
+							{/if}
+							{#if application.aiScore}
+								&middot; <span class="text-muted-foreground">Score: {application.aiScore}</span>
+							{/if}
+						</div>
+						{#if application.status}
+							<p class="text-xs mt-1" class:text-green-600={application.status === 'Accepted'} class:text-red-500={application.status === 'Rejected'}>
+								Status: <strong>{application.status}</strong>
+							</p>
+						{/if}
+					</div>
+
+					<!-- Right side: Action buttons -->
+					<div class="flex gap-2 mt-1 md:mt-0">
+						<Button
+							size="sm"
+							variant="default"
+							on:click={() => updateStatus('Accepted')}
+							disabled={application.status === 'Accepted'}
+						>
+							✅ Accept
+						</Button>
+						<Button
+							size="sm"
+							variant="destructive"
+							on:click={() => updateStatus('Rejected')}
+							disabled={application.status === 'Rejected'}
+						>
+							❌ Reject
+						</Button>
+					</div>
+				</div>
+
+				<!-- Justification button and optional status -->
+				<div class="mt-3 flex items-center justify-between">
+					<Button size="sm" variant="outline" on:click={() => (showModal = true)}>
+						View Justification
+					</Button>
+				</div>
+			</div>
 
 			<Separator />
 
@@ -215,62 +269,7 @@
 
 			<!-- AI summary footer -->
 			<Separator class="mt-auto" />
-			<div class="border rounded-md p-4 bg-muted/50 mt-4">
-				<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-					<!-- Left side: Recommendation text -->
-					<div>
-						<p class="font-medium text-sm mb-1">🧠 Quant AI Recommendation</p>
-						<div class="text-sm">
-							{#if application.aiRecommendation}
-								{#if application.aiRecommendation.toLowerCase() === 'hire'}
-									✅ <strong>Recommended</strong>
-								{:else}
-									❌ <strong>Not Recommended</strong>
-								{/if}
-							{:else}
-								<span class="italic text-muted-foreground">No recommendation</span>
-							{/if}
-							{#if application.aiScore}
-								&middot; <span class="text-muted-foreground">Score: {application.aiScore}</span>
-							{/if}
-						</div>
-						{#if application.status}
-							<p class="text-xs mt-1" class:text-green-600={application.status === 'Accepted'} class:text-red-500={application.status === 'Rejected'}>
-								Status: <strong>{application.status}</strong>
-							</p>
-						{/if}
-					</div>
-
-					<!-- Right side: Action buttons -->
-					<div class="flex gap-2 mt-1 md:mt-0">
-						<Button
-							size="sm"
-							variant="default"
-							on:click={() => updateStatus('Accepted')}
-							disabled={application.status === 'Accepted'}
-						>
-							✅ Accept
-						</Button>
-						<Button
-							size="sm"
-							variant="destructive"
-							on:click={() => updateStatus('Rejected')}
-							disabled={application.status === 'Rejected'}
-						>
-							❌ Reject
-						</Button>
-					</div>
-				</div>
-
-				<!-- Justification button and optional status -->
-				<div class="mt-3 flex items-center justify-between">
-					<Button size="sm" variant="outline" on:click={() => (showModal = true)}>
-						View Justification
-					</Button>
-				</div>
-			</div>
-
-
+			
 			{#if showModal}
 				<Dialog bind:open={showModal}>
 					<DialogContent class="max-w-lg">
